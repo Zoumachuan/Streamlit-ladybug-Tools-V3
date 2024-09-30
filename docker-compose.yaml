@@ -1,0 +1,11 @@
+version: '3.8'
+
+services:
+  streamlit_app:
+    image: zhenzixu/streamlit-ladybug-tools-v3
+    ports:
+      - "8501:8501"
+    environment:
+      OPENAI_API_SCHEME: "http"
+      OPENAI_API_HOST: ""
+      OPENAI_API_KEY: ""
