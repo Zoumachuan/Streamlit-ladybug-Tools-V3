@@ -4,13 +4,10 @@ import streamlit as st
 import http.client
 import json
 import requests
-import zipfile
 import os
 import tempfile
 from utils.template_base import set_user_defined_colors
-from utils.data_loader import load_epw_file, unzip_and_load_epw, load_uploaded_epw
-from utils.data_processor import filter_by_analysis_period, calculate_monthly_averages, calculate_daily_averages
-from utils.chart_generator import generate_bar_chart, generate_wind_rose
+from utils.data_loader import unzip_and_load_epw, load_uploaded_epw
 from charts.temperature_chart import generate_temperature_charts
 from charts.humidity_chart import generate_humidity_charts
 from charts.wind_chart import generate_wind_charts
@@ -18,10 +15,7 @@ from charts.sky_cover_chart import generate_sky_cover_charts
 from charts.radiation_chart import generate_radiation_charts
 from charts.illuminance_chart import generate_illuminance_charts
 from charts.passive_strategies_chart import generate_passive_strategies_chart
-
-st.set_page_config(
-    page_title="气象数据在线可视化"
-)
+from charts.artificial_intelligence_zone import generate_ai_report
 
 ALIST_URL = "warehouse.archknowledge.com.cn"
 ALIST_AUTHORIZATION = "alist-79f0737a-97a0-4c5f-a51e-df4afecd5d44dB1P9QSM5FRCJbUc0HrywajGijam55RFS1hSvLCGLviwwGhsoqtcaGGcByeg7ELM"
@@ -54,12 +48,12 @@ def download_file(url):
     return local_filename
 
 def run_app():
-    st.header("气象数据与被动策略在线可视化")
+    st.header("气象数据与被动策略在线可视化/Visualization of Meteorological Data and Passive Strategies")
     
     continent_folders = fetch_file_list()
     continent_folders = [f for f in continent_folders if f['is_dir']]
     
-    epw = None  # 初始化 epw 变量
+    epw = None # 初始化 epw 变量
 
     if continent_folders:
         selected_continent = st.selectbox("选择大洲/Select a continent", [f['name'] for f in continent_folders])
@@ -128,6 +122,7 @@ def run_app():
                 set_user_defined_colors(custom_color_1, custom_color_2)
 
             data_type = st.selectbox("选择可视化内容/Select Data Type", [
+                "人工智能专区/Artificial Intelligence Zone",
                 "被动策略/Passive Strategies",
                 "温度/Temperature",
                 "相对湿度/Relative Humidity",
@@ -141,8 +136,25 @@ def run_app():
                 "全球水平照度/Global Horizontal Ill"
             ])
 
-            # 图表和分析
-            if data_type == "被动策略/Passive Strategies":
+            if data_type == "人工智能专区/Artificial Intelligence Zone":
+                # 生成图表模块并收集总结信息（不显示图表）
+                passive_strategies_summary = generate_passive_strategies_chart(epw, show_charts=False)
+                temperature_summary = generate_temperature_charts(epw, start_month, end_month, color_scheme, show_charts=False)
+                humidity_summary = generate_humidity_charts(epw, start_month, end_month, color_scheme, show_charts=False)
+                wind_summary = generate_wind_charts(epw, start_month, end_month, color_scheme, show_charts=False)
+                sky_cover_summary = generate_sky_cover_charts(epw, start_month, end_month, color_scheme, show_charts=False)
+                radiation_summary = generate_radiation_charts(epw, start_month, end_month, color_scheme, "Global",show_charts=False)
+                illuminance_summary = generate_illuminance_charts(epw, start_month, end_month, color_scheme, "Global",show_charts=False)
+                generate_ai_report(
+                    passive_strategies_summary=passive_strategies_summary, 
+                    temperature_summary=temperature_summary, 
+                    humidity_summary=humidity_summary, 
+                    wind_summary=wind_summary, 
+                    sky_cover_summary=sky_cover_summary,
+                    radiation_summary = radiation_summary,
+                    illuminance_summary = illuminance_summary
+                )
+            elif data_type == "被动策略/Passive Strategies":
                 generate_passive_strategies_chart(epw)
             elif data_type == "温度/Temperature":
                 generate_temperature_charts(epw, start_month, end_month, color_scheme)

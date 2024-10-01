@@ -8,7 +8,7 @@ import pandas as pd
 import json
 from utils.openai_integration import generate_passive_strategies_advice
 
-def generate_passive_strategies_chart(epw):
+def generate_passive_strategies_chart(epw,show_charts=True):
     """
     生成被动策略相关图表。
 
@@ -162,21 +162,7 @@ def generate_passive_strategies_chart(epw):
     # 计算分布比例
     total_hours = 8760  # 假设共有8760个小时的数据
     state_distribution = [count for count in state_counts]
-    
-    # 创建彩色条
-    fig = go.Figure(data=[go.Bar(x=state_distribution, y=states, orientation="h", marker_color=colors)])
-    
-    # 设置图表布局
-    fig.update_layout(
-        title="Passive Strategies/被动策略",
-        xaxis_title="Hour Count/占比小时数",
-        yaxis_title="States/策略",
-        yaxis_categoryorder="total ascending",
-    )
-    
-    # 绘制图表
-    st.plotly_chart(fig, use_container_width=True)
-    
+
     # 计算被动策略的占比
     passive_strategies_percentages = []
     for i in range(len(states)):
@@ -184,11 +170,27 @@ def generate_passive_strategies_chart(epw):
         passive_strategies_percentages.append(percentage)
 
     # 将图表整理成文字形式
-    chart_text = ""
-    for i in range(len(states)):
-        chart_text += f"{states[i]} 占比 {passive_strategies_percentages[i]:.2f}%\n"
+    chart_text = "".join(f"{states[i]} 占比 {passive_strategies_percentages[i]:.2f}%\n" for i in range(len(states)))
 
-    # 新增AI分析按钮
-    if st.button('Obtain passive strategy recommendations'):
-        advice = generate_passive_strategies_advice(chart_text)
-        st.markdown(f"**AI分析结果:**\n{advice}")
+    if show_charts:
+        # 创建彩色条
+        fig = go.Figure(data=[go.Bar(x=state_distribution, y=states, orientation="h", marker_color=colors)])
+        
+        # 设置图表布局
+        fig.update_layout(
+            title="Passive Strategies/被动策略",
+            xaxis_title="Hour Count/占比小时数",
+            yaxis_title="States/策略",
+            yaxis_categoryorder="total ascending",
+        )
+        
+        # 绘制图表
+        st.plotly_chart(fig, use_container_width=True)
+
+        # 新增AI分析按钮
+        if st.button('Obtain passive strategy recommendations'):
+            advice = generate_passive_strategies_advice(chart_text)
+            st.markdown(f"**AI分析结果:**\n{advice}")
+     
+
+    return chart_text

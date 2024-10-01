@@ -10,7 +10,7 @@ from utils.template_base import map_to_color
 from utils.openai_integration import generate_temperature_analysis_advice
 from ladybug.analysisperiod import AnalysisPeriod
 
-def generate_temperature_charts(epw, start_month, end_month, color_scheme):
+def generate_temperature_charts(epw, start_month, end_month, color_scheme,show_charts=True):
     """
     生成温度相关图表。
 
@@ -42,55 +42,18 @@ def generate_temperature_charts(epw, start_month, end_month, color_scheme):
 
     color_values_select = [map_to_color(temp, min_temp_select, max_temp_select, color_scheme) for temp in temperature_values_select]
     color_values_full = [map_to_color(temp, min_temp_full, max_temp_full, color_scheme) for temp in temperature_values_full]
-    
-    # 生成每小时的干球温度柱状图
-    fig_dry1 = generate_bar_chart(
-        temperature_values_select,
-        f"Hourly Dry Bulb Temperature ({start_month} to {end_month} Month)",
-        "Hour",
-        "Dry Bulb Temperature (°C)",
-        color_values_select
-    )
-    
+
     # 计算日均温
     daily_averages = calculate_daily_averages(temperature_values_day, dry_bulb_temps_day.datetimes)
     min_temp_daily_avg = daily_averages.min()
     max_temp_daily_avg = daily_averages.max()
     color_values_day = [map_to_color(temp, min_temp_daily_avg, max_temp_daily_avg, color_scheme) for temp in daily_averages]
 
-    # 生成每日的干球温度柱状图
-    fig_dry2 = generate_bar_chart(
-        daily_averages,
-        f"Daily Dry Bulb Temperature ({start_month} to {end_month} Month)",
-        "Day",
-        "Daily Average Dry Bulb Temperature (°C)",
-        color_values_day
-    )
-
     # 计算每月的干球温度均值
     monthly_averages = calculate_monthly_averages(temperature_values_full, dry_bulb_temps_full.datetimes)
     min_avg_temp = monthly_averages.min()
     max_avg_temp = monthly_averages.max()
     avg_color_values = [map_to_color(temp, min_avg_temp, max_avg_temp, color_scheme) for temp in monthly_averages]
-    
-    # 生成每月的干球温度柱状图
-    fig_dry3 = generate_bar_chart(
-        monthly_averages,
-        "Monthly Average Dry Bulb Temperature",
-        "Month",
-        "Average Dry Bulb Temperature (°C)",
-        avg_color_values
-    )
-    fig_dry3.update_xaxes(tickvals=list(range(1, 13)), ticktext=["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"])
-
-    # 显示图表
-    chart_selection = st.radio('Select Chart to Display', ['Hourly Dry Bulb Temperature', 'Daily Dry Bulb Temperature', 'Monthly Average Dry Bulb Temperature'])
-    if chart_selection == 'Hourly Dry Bulb Temperature':
-        st.plotly_chart(fig_dry1, use_container_width=True)
-    elif chart_selection == 'Daily Dry Bulb Temperature':
-        st.plotly_chart(fig_dry2, use_container_width=True)
-    else:
-        st.plotly_chart(fig_dry3, use_container_width=True)
 
     # 计算一些总结性统计数据
     total_avg_temp = monthly_averages.mean()
@@ -139,8 +102,47 @@ def generate_temperature_charts(epw, start_month, end_month, color_scheme):
         f"炎热温度的天气有{hot_days}天，极热温度的天气有{extreme_hot_days}天"
     )
 
-    # 新增AI分析按钮
-    if st.button('Current Month and Annual Temperature Evaluation'):
-        advice = generate_temperature_analysis_advice(monthly_text, daily_text)
-        st.markdown(f"**AI分析结果:**\n{advice}")
+    if show_charts:   
+    # 生成每小时的干球温度柱状图
+        fig_dry1 = generate_bar_chart(
+            temperature_values_select,
+            f"Hourly Dry Bulb Temperature ({start_month} to {end_month} Month)",
+            "Hour",
+            "Dry Bulb Temperature (°C)",
+            color_values_select
+        )
 
+        # 生成每日的干球温度柱状图
+        fig_dry2 = generate_bar_chart(
+            daily_averages,
+            f"Daily Dry Bulb Temperature ({start_month} to {end_month} Month)",
+            "Day",
+            "Daily Average Dry Bulb Temperature (°C)",
+            color_values_day
+        )
+
+        # 生成每月的干球温度柱状图
+        fig_dry3 = generate_bar_chart(
+            monthly_averages,
+            "Monthly Average Dry Bulb Temperature",
+            "Month",
+            "Average Dry Bulb Temperature (°C)",
+            avg_color_values
+        )
+        fig_dry3.update_xaxes(tickvals=list(range(1, 13)), ticktext=["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"])
+
+        # 显示图表
+        chart_selection = st.radio('Select Chart to Display', ['Hourly Dry Bulb Temperature', 'Daily Dry Bulb Temperature', 'Monthly Average Dry Bulb Temperature'])
+        if chart_selection == 'Hourly Dry Bulb Temperature':
+            st.plotly_chart(fig_dry1, use_container_width=True)
+        elif chart_selection == 'Daily Dry Bulb Temperature':
+            st.plotly_chart(fig_dry2, use_container_width=True)
+        else:
+            st.plotly_chart(fig_dry3, use_container_width=True)
+
+        # 新增AI分析按钮
+        if st.button('Current Month and Annual Temperature Evaluation'):
+            advice = generate_temperature_analysis_advice(monthly_text, daily_text)
+            st.markdown(f"**AI分析结果:**\n{advice}")
+            
+    return f"{monthly_text}\n{daily_text}"

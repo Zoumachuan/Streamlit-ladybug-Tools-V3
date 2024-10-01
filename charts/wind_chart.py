@@ -28,7 +28,22 @@ def generate_legend_parameters(color_scheme):
         color_list = [Color(0, 0, 0), Color(240, 240, 240)]
     elif color_scheme == 2:
         color_list = [Color(65, 65, 255), Color(255, 65, 65)]
-    # 可添加更多的色卡编号和对应颜色
+    elif color_scheme == 3:
+        color_list = [Color(238, 105, 131), Color(255, 245, 228)]
+    elif color_scheme == 4:
+        color_list = [Color(151, 92, 141), Color(255, 173, 188)]
+    elif color_scheme == 5:
+        color_list = [Color(34, 87, 126), Color(149, 209, 204)]
+    elif color_scheme == 6:
+        color_list = [Color(185, 255, 252), Color(117, 121, 231)]
+    elif color_scheme == 7:
+        color_list = [Color(26, 18, 11), Color(229, 229, 203)]
+    elif color_scheme == 8:
+        color_list = [Color(109, 159, 217), Color(238, 222, 236)]
+    elif color_scheme == 9:
+        color_list = [Color(45, 34, 78), Color(235, 211, 5)]  # 默认黑白颜色
+
+    return LegendParameters(colors=color_list)
 
     return LegendParameters(colors=color_list)
 
@@ -50,7 +65,7 @@ def get_wind_direction_name(degrees):
     index = round((((degree_val + 11.25) % 360) - 11.25) / 22.5) 
     return directions[index % 16]
 
-def generate_wind_charts(epw, start_month, end_month, color_scheme):
+def generate_wind_charts(epw, start_month, end_month, color_scheme,show_charts=True):
     """
     生成风速和风玫瑰图。
 
@@ -91,63 +106,18 @@ def generate_wind_charts(epw, start_month, end_month, color_scheme):
 
     color_values_select_speed = [map_to_color(speed, min_speed_select, max_speed_select, color_scheme) for speed in speed_values_select]
     color_values_full_speed = [map_to_color(speed, min_speed_full, max_speed_full, color_scheme) for speed in speed_values_full]
-    
-    # 生成每小时的风速柱状图
-    fig_speed1 = generate_bar_chart(
-        speed_values_select,
-        f"Hourly Wind Speed ({start_month} to {end_month} Month)",
-        "Hour",
-        "Wind Speed (m/s)",
-        color_values_select_speed
-    )
-    
+
     # 计算日均风速
     daily_averages_speed = calculate_daily_averages(speed_values_day, wind_speed_day.datetimes)
     min_speed_daily_avg = daily_averages_speed.min()
     max_speed_daily_avg = daily_averages_speed.max()
     color_values_day_speed = [map_to_color(speed, min_speed_daily_avg, max_speed_daily_avg, color_scheme) for speed in daily_averages_speed]
 
-    # 生成每日的风速柱状图
-    fig_speed2 = generate_bar_chart(
-        daily_averages_speed,
-        f"Daily Wind Speed ({start_month} to {end_month} Month)",
-        "Day",
-        "Daily Average Wind Speed (m/s)",
-        color_values_day_speed
-    )
-
-    # 生成风玫瑰图
-    legend_parameters = generate_legend_parameters(color_scheme)
-    title = "Wind Rose Diagram"
-    fig_wind_rose = generate_wind_rose(wind_direction_full, wind_speed_full, range_full, legend_parameters, title)
-    
     # 生成每月的风速均值
     monthly_averages_speed = calculate_monthly_averages(speed_values_full, wind_speed_full.datetimes)
     min_avg_speed = monthly_averages_speed.min()
     max_avg_speed = monthly_averages_speed.max()
     avg_color_values_speed = [map_to_color(speed, min_avg_speed, max_avg_speed, color_scheme) for speed in monthly_averages_speed]
-    
-    # 生成每月的风速柱状图
-    fig_speed3 = generate_bar_chart(
-        monthly_averages_speed,
-        "Monthly Average Wind Speed",
-        "Month",
-        "Average Wind Speed (m/s)",
-        avg_color_values_speed
-    )
-    fig_speed3.update_xaxes(tickvals=list(range(1, 13)), ticktext=["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"])
-
-    # 显示图
-    chart_selection = st.radio('Select Chart to Display', ['Hourly Wind Speed', 'Daily Wind Speed', 'Monthly Average Wind Speed', 'Wind Rose Diagram'])
-    if chart_selection == 'Hourly Wind Speed':
-        st.plotly_chart(fig_speed1, use_container_width=True)
-    elif chart_selection == 'Daily Wind Speed':
-        st.plotly_chart(fig_speed2, use_container_width=True)
-    elif chart_selection == 'Monthly Average Wind Speed':
-        st.plotly_chart(fig_speed3, use_container_width=True)
-    else:
-        st.plotly_chart(fig_wind_rose, use_container_width=True)
-
     # 计算一些总结性统计数据
     total_avg_speed = monthly_averages_speed.mean()
     slowest_month = monthly_averages_speed.idxmin()
@@ -161,23 +131,65 @@ def generate_wind_charts(epw, start_month, end_month, color_scheme):
     prevailing_direction_year = wind_rose_year.prevailing_direction
 
     # 获取风向名称
-    prevailing_direction_month_name = get_wind_direction_name(prevailing_direction_month)
-    prevailing_direction_year_name = get_wind_direction_name(prevailing_direction_year)
-
-    # 新增AI分析按钮
-    if st.button('Current Month and Annual Wind Speed Analysis'):
-        monthly_text = str(
-            f"从全年来看，总的平均风速是{total_avg_speed:.2f} m/s，"
-            f"最高风速出现在{fastest_month}月，为{monthly_averages_speed.max():.2f} m/s，"
-            f"最低风速出现在{slowest_month}月，为{monthly_averages_speed.min():.2f} m/s，"
-            f"最高风速月与最低风速月之间的风速差值为{speed_difference:.2f} m/s"
-        )
+    prevailing_direction_month_name = str("该城市的月盛行风向" + get_wind_direction_name(prevailing_direction_month))
+    prevailing_direction_year_name = str("该城市的年盛行风向" + get_wind_direction_name(prevailing_direction_year))
+    monthly_text = str(
+    f"从全年来看，总的平均风速是{total_avg_speed:.2f} m/s，"
+    f"最高风速出现在{fastest_month}月，为{monthly_averages_speed.max():.2f} m/s，"
+    f"最低风速出现在{slowest_month}月，为{monthly_averages_speed.min():.2f} m/s，"
+    f"最高风速月与最低风速月之间的风速差值为{speed_difference:.2f} m/s"
+    )
         
-        daily_text = str(
-            f"当前月份的平均风速是{daily_averages_speed.mean():.2f} m/s，"
-            f"最高风速是{max_speed_daily_avg:.2f} m/s，最低风速是{min_speed_daily_avg:.2f} m/s"
+    daily_text = str(
+        f"当前月份的平均风速是{daily_averages_speed.mean():.2f} m/s，"
+        f"最高风速是{max_speed_daily_avg:.2f} m/s，最低风速是{min_speed_daily_avg:.2f} m/s"
+    )
+    if show_charts:
+        # 生成每小时的风速柱状图
+        fig_speed1 = generate_bar_chart(
+            speed_values_select,
+            f"Hourly Wind Speed ({start_month} to {end_month} Month)",
+            "Hour",
+            "Wind Speed (m/s)",
+            color_values_select_speed
         )
-        
-        advice = generate_wind_analysis_advice(monthly_text, daily_text, prevailing_direction_month_name, prevailing_direction_year_name)
-        st.markdown(f"**AI分析结果:**\n{advice}")
+        # 生成每日的风速柱状图
+        fig_speed2 = generate_bar_chart(
+            daily_averages_speed,
+            f"Daily Wind Speed ({start_month} to {end_month} Month)",
+            "Day",
+            "Daily Average Wind Speed (m/s)",
+            color_values_day_speed
+        )
+        # 生成风玫瑰图
+        legend_parameters = generate_legend_parameters(color_scheme)
+        title = "Wind Rose Diagram"
+        fig_wind_rose = generate_wind_rose(wind_direction_full, wind_speed_full, range_full, legend_parameters, title)
+    
+        # 生成每月的风速柱状图
+        fig_speed3 = generate_bar_chart(
+            monthly_averages_speed,
+            "Monthly Average Wind Speed",
+            "Month",
+            "Average Wind Speed (m/s)",
+            avg_color_values_speed
+        )
+        fig_speed3.update_xaxes(tickvals=list(range(1, 13)), ticktext=["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"])
 
+        # 显示图
+        chart_selection = st.radio('Select Chart to Display', ['Hourly Wind Speed', 'Daily Wind Speed', 'Monthly Average Wind Speed', 'Wind Rose Diagram'])
+        if chart_selection == 'Hourly Wind Speed':
+            st.plotly_chart(fig_speed1, use_container_width=True)
+        elif chart_selection == 'Daily Wind Speed':
+            st.plotly_chart(fig_speed2, use_container_width=True)
+        elif chart_selection == 'Monthly Average Wind Speed':
+            st.plotly_chart(fig_speed3, use_container_width=True)
+        else:
+            st.plotly_chart(fig_wind_rose, use_container_width=True)
+
+        # 新增AI分析按钮
+        if st.button('Current Month and Annual Wind Speed Analysis'):
+            advice = generate_wind_analysis_advice(monthly_text, daily_text, prevailing_direction_month_name, prevailing_direction_year_name)
+            st.markdown(f"**AI分析结果:**\n{advice}")
+
+    return f"{monthly_text}\n{daily_text}"
