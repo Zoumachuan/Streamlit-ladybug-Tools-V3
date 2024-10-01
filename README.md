@@ -1,4 +1,4 @@
-# 🌍 Streamlit-ladybug-Tools-V3.0 🐞
+# 🌍 Streamlit-ladybug-Tools-V3.1 🐞
 
 ## 项目简介 📖
 
@@ -25,7 +25,12 @@
 
 ## 版本更新 🔄
 
-与2.0版本相比，3.0版本进行了全面的重构和优化：
+### 3.1 版本更新
+
+- ➕ 增加一键人工智能板块，可以一键获取绿建气候信息报告，方便制作文本。
+- 📂 结构更新：增加 `charts/artificial_intelligence_zone`，用于处理人工智能总结。
+
+### 3.0 版本更新
 
 - 🔧 **代码重构**：删除冗余代码，提升代码可读性。
 - 🚀 **性能提升**：迁移至高性能服务器。
@@ -42,7 +47,7 @@
 
 1. 克隆仓库：
    ```bash
-   git clone https://github.com/Zoumachuan/Streamlit-ladybug-Tools-V3.0
+   git clone https://github.com/Zoumachuan/Streamlit-ladybug-Tools-V3
    ```
 2. 修改配置：
    修改 `config.py` 中的 `OPENAI_API_HOST` 和 `OPENAI_API_KEY`。
@@ -61,7 +66,7 @@
 
 1. 克隆仓库：
    ```bash
-   git clone https://github.com/Zoumachuan/Streamlit-ladybug-Tools-V3.0
+   git clone https://github.com/Zoumachuan/Streamlit-ladybug-Tools-V3
    ```
 2. 修改配置：
    修改 `docker-compose.yaml` 中的 `OPENAI_API_HOST` 和 `OPENAI_API_KEY`。
@@ -88,6 +93,7 @@
   - `sky_cover_chart.py` 用于生成天空覆盖率图 ☁️
   - `temperature_chart.py` 用于生成温度图 🌡️
   - `wind_chart.py` 用于生成风玫瑰图 🌬️
+  - `artificial_intelligence_zone/` 用于处理人工智能总结
 - `utils/` 存放各种数据处理函数
   - `chart_generator.py` 用于图表生成 📈
   - `data_loader.py` 用于读取EPW文件 📂
@@ -99,3 +105,8 @@
 - `dockerfile` Docker 配置文件 🐋
 - `main.py` 主程序入口 🚪
 - `requirements.txt` 依赖库列表 📜
+
+## 后续可能会更新的内容 🔮
+
+- 增加人工智能在项目中的比重。
+- 增加绿色建筑知识库。
