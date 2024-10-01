@@ -20,6 +20,13 @@ from charts.artificial_intelligence_zone import generate_ai_report
 ALIST_URL = "warehouse.archknowledge.com.cn"
 ALIST_AUTHORIZATION = "alist-79f0737a-97a0-4c5f-a51e-df4afecd5d44dB1P9QSM5FRCJbUc0HrywajGijam55RFS1hSvLCGLviwwGhsoqtcaGGcByeg7ELM"
 
+st.set_page_config(
+    page_title="气象数据与被动策略在线可视化/Visualization of Meteorological Data and Passive Strategies", 
+    page_icon="🐞", 
+    layout="wide", 
+    initial_sidebar_state="auto"
+)
+
 def fetch_file_list(path="/"):
     conn = http.client.HTTPConnection(ALIST_URL)
     payload = json.dumps({"path": path, "password": "", "page": 1, "per_page": 0, "refresh": False})
